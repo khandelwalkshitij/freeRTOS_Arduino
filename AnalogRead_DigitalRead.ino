@@ -9,6 +9,8 @@ Author: Kshitij Khandelwal
 
 #include <Arduino_FreeRTOS.h>
 #include <semphr.h>  // add the FreeRTOS functions for Semaphores (or Flags).
+#include <SFE_BMP180.h>
+#include <Wire.h>
 
 // Declare a mutex Semaphore Handle which we will use to manage the Serial Port.
 // It will be used to ensure only only one Task is accessing this resource at any time.
@@ -105,8 +107,6 @@ void TaskAnalogRead( void *pvParameters __attribute__((unused)) )  // This is a 
 
   for (;;)
   {
-    // read the input on analog pin 0:
-    int sensorValue = analogRead(A0);
 
     // See if we can obtain or "Take" the Serial Semaphore.
     // If the semaphore is not available, wait 5 ticks of the Scheduler to see if it becomes free.
@@ -116,7 +116,12 @@ void TaskAnalogRead( void *pvParameters __attribute__((unused)) )  // This is a 
       // We want to have the Serial Port for us alone, as it takes some time to print,
       // so we don't want it getting stolen during the middle of a conversion.
       // print out the value you read:
-      Serial.println(sensorValue);
+      SFE_BMP180 temperature;
+      double T;
+      temperature.begin();
+      temperature.getTemperature(T);// Print out the measurement:
+      Serial.print("Temperature(C): ");
+      Serial.println(T,2);
 
       xSemaphoreGive( xSerialSemaphore ); // Now free or "Give" the Serial Port for others.
     }
